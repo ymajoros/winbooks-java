@@ -66,6 +66,7 @@ public class DbfUtils {
 
                 return true;
             } catch (IOException | RuntimeException exception) {
+                closeDbfReader(dbfReader);
                 throw new WinbooksException(WinbooksError.UNKNOWN_ERROR, exception);
             }
         }

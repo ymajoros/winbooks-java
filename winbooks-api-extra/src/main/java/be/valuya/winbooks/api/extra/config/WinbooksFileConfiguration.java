@@ -23,12 +23,14 @@ public class WinbooksFileConfiguration {
     private boolean ignoreMissingArchives = true;
     private boolean readTablesToMemory = true;
     private boolean resolveArchivedBookYears = true;
+    private boolean tryResolveArchivedBookYearsFromRootPath = true;
     private boolean resolveCaseInsensitiveSiblings = true;
     private boolean resolveUnmappedPeriodFromEntryDate = true;
     private boolean resolveDocumentTimes = true;
     private DocumentMatchingMode documentMatchingMode = DocumentMatchingMode.EAGERLY_CACHE_ALL_DOCUMENTS;
     private Optional<LocalDate> bookYearStartMinDateOptional = Optional.empty();
     private Optional<LocalDate> bookYearStartMaxDateOptional = Optional.empty();
+    private Optional<String> bookYearName = Optional.empty();
 
     public String getUsername() {
         return username;
@@ -177,6 +179,14 @@ public class WinbooksFileConfiguration {
         this.ignoreConversionErrors = ignoreConversionErrors;
     }
 
+    public void setBookYearName(String bookYearName) {
+        this.bookYearName = Optional.ofNullable(bookYearName);
+    }
+
+    public Optional<String> getBookYearNameOptional() {
+        return bookYearName;
+    }
+
     public Map<String, Path> getPathMappings() {
         return pathMappings;
     }
@@ -209,5 +219,13 @@ public class WinbooksFileConfiguration {
      */
     public void setPathMappings(Map<String, Path> pathMappings) {
         this.pathMappings = pathMappings;
+    }
+
+    public boolean isTryResolveArchivedBookYearsFromRootPath() {
+        return tryResolveArchivedBookYearsFromRootPath;
+    }
+
+    public void setTryResolveArchivedBookYearsFromRootPath(boolean tryResolveArchivedBookYearsFromRootPath) {
+        this.tryResolveArchivedBookYearsFromRootPath = tryResolveArchivedBookYearsFromRootPath;
     }
 }

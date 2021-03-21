@@ -29,6 +29,7 @@ public class ATDocumentConverter {
         String documentNumber = wbDocument.getDocumentNumber();
         String dbkCode = wbDocument.getDbkCode();
         WbPeriod wbPeriod = wbDocument.getWbPeriod();
+        String absolutePathName = wbDocument.getAbsolutePathName();
         int partCount = wbDocument.getPartCount();
         LocalDateTime creationTime = wbDocument.getCreationTime();
         LocalDateTime updatedTime = wbDocument.getUpdatedTime();
@@ -46,6 +47,7 @@ public class ATDocumentConverter {
         atDocument.setCreationTime(creationTime);
         atDocument.setUpdateTime(updatedTime);
         atDocument.setProviderReference(fileName);
+        atDocument.setAbsolutePath(absolutePathName);
         return atDocument;
     }
 
@@ -66,6 +68,8 @@ public class ATDocumentConverter {
         Optional<LocalDateTime> updateTimeOptional = atDocument.getUpdateTimeOptional();
         Optional<String> providerReferenceOptional = atDocument.getProviderReferenceOptional();
         Optional<Integer> partCountOptional = atDocument.getPartCountOptional();
+        String absolutePath = atDocument.getAbsolutePath();
+
 
         List<WbBookYearFull> wbBookYearFulls = accountingManagerCache.streamWbBookYearFulls()
                 .collect(Collectors.toList());
@@ -75,6 +79,7 @@ public class ATDocumentConverter {
         wbDocument.setDocumentNumber(documentNumber);
         wbDocument.setDbkCode(dbkCode);
         wbDocument.setWbPeriod(wbPeriod);
+        wbDocument.setAbsolutePathName(absolutePath);
         updateTimeOptional.ifPresent(wbDocument::setUpdatedTime);
         creationTimeOptional.ifPresent(wbDocument::setCreationTime);
         partCountOptional.ifPresent(wbDocument::setPartCount);

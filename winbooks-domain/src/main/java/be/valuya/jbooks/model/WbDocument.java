@@ -13,6 +13,7 @@ public class WbDocument {
     private LocalDateTime updatedTime;
     // Filename with a {0} placeholder for the page number
     private String fileNameTemplate;
+    private String absolutePathName;
 
     public String getDocumentNumber() {
         return documentNumber;
@@ -68,6 +69,14 @@ public class WbDocument {
 
     public void setFileNameTemplate(String fileNameTemplate) {
         this.fileNameTemplate = fileNameTemplate;
+    }
+
+    public String getAbsolutePathName() {
+        return absolutePathName;
+    }
+
+    public void setAbsolutePathName(String absolutePathName) {
+        this.absolutePathName = absolutePathName;
     }
 
     @Override

@@ -18,11 +18,14 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,7 +36,6 @@ class WinbooksPathUtils {
     static Optional<Path> getBookYearBasePath(WinbooksFileConfiguration fileConfiguration, WbBookYearFull wbBookYearFull) {
         boolean resolveArchivedBookYears = fileConfiguration.isResolveArchivedBookYears();
         boolean ignoreMissingArchives = fileConfiguration.isIgnoreMissingArchives();
-        boolean resolveCaseInsensitiveSiblings = fileConfiguration.isResolveCaseInsensitiveSiblings();
         Map<String, Path> pathMappings = getPathMappingsIncludingRootPath(fileConfiguration);
         Path baseFolderPath = getDossierBasePath(fileConfiguration);
 
@@ -41,7 +43,7 @@ class WinbooksPathUtils {
             boolean archivedBookYear = isArchivedBookYear(wbBookYearFull);
             if (archivedBookYear) {
                 if (resolveArchivedBookYears) {
-                    Path archivePath = resolveArchivePathOrThrow(wbBookYearFull, resolveCaseInsensitiveSiblings, pathMappings);
+                    Path archivePath = resolveArchivePathOrThrow(wbBookYearFull, fileConfiguration, pathMappings);
                     return Optional.of(archivePath);
                 } else {
                     return Optional.empty();
@@ -89,7 +91,7 @@ class WinbooksPathUtils {
     }
 
     static Optional<Path> resolvePath(Path parentPath, String fileName, boolean resolveCaseInsensitiveSiblings) {
-        if (parentPath == null) {
+        if (parentPath == null || fileName == null) {
             return Optional.empty();
         }
         Path defaultPath = parentPath.resolve(fileName);
@@ -105,6 +107,20 @@ class WinbooksPathUtils {
             Path capitalizedExtensionPath = parentPath.resolve(capitalizedExtensionFileName);
             if (Files.exists(capitalizedExtensionPath)) {
                 return Optional.of(capitalizedExtensionPath);
+            }
+        }
+        String lowerName = fileName.toLowerCase(Locale.ROOT);
+        if (!lowerName.equals(fileName)) {
+            Path lowerPath = parentPath.resolve(lowerName);
+            if (Files.exists(lowerPath)) {
+                return Optional.of(lowerPath);
+            }
+        }
+        String upperName = fileName.toUpperCase(Locale.ROOT);
+        if (!upperName.equals(fileName)) {
+            Path upperPath = parentPath.resolve(upperName);
+            if (Files.exists(upperPath)) {
+                return Optional.of(upperPath);
             }
         }
         if (resolveCaseInsensitiveSiblings) {
@@ -150,6 +166,23 @@ class WinbooksPathUtils {
         }
     }
 
+    static boolean isArchivedPathName(String pathName) {
+        return tryGetBaseNameFromPathName(pathName)
+                .map(s -> !s.equals(pathName))
+                .orElse(false);
+    }
+
+    static Optional<String> tryGetBaseNameFromPathName(String pathName) {
+        // Strip archives suffix, eg BASENAME-2012
+        Pattern pattern = Pattern.compile("(.+)-[0-9]{4}");
+        Matcher matcher = pattern.matcher(pathName);
+        if (matcher.matches()) {
+            String group = matcher.group(1);
+            return Optional.of(group);
+        } else {
+            return Optional.empty();
+        }
+    }
 
     private static Optional<Path> resolveCaseInsensitivePathOptional(Path parentPath, String fileName) {
         try {
@@ -200,17 +233,33 @@ class WinbooksPathUtils {
         return archivePathNameOptional.isPresent();
     }
 
-    private static Path resolveArchivePathOrThrow(WbBookYearFull wbBookYearFull, boolean resolveCaseInsitiveSiblings, Map<String, Path> pathMappings) throws ArchivePathNotFoundException {
-        return resolveBookYearArchivePath(wbBookYearFull, resolveCaseInsitiveSiblings, pathMappings)
+    private static Path resolveArchivePathOrThrow(WbBookYearFull wbBookYearFull,
+                                                  WinbooksFileConfiguration fileConfiguration,
+                                                  Map<String, Path> pathMappings) throws ArchivePathNotFoundException {
+        return resolveBookYearArchivePath(wbBookYearFull, fileConfiguration, pathMappings)
                 .orElseThrow(() -> new ArchivePathNotFoundException(wbBookYearFull));
     }
 
-    private static Optional<Path> resolveBookYearArchivePath(WbBookYearFull wbBookYearFull, boolean resolveCaseInsitiveSiblings, Map<String, Path> pathMappings) {
+    private static Optional<Path> resolveBookYearArchivePath(WbBookYearFull wbBookYearFull,
+                                                             WinbooksFileConfiguration fileConfiguration,
+                                                             Map<String, Path> pathMappings) {
         if (!isArchivedBookYear(wbBookYearFull)) {
             return Optional.empty();
         }
         String archivePathName = wbBookYearFull.getArchivePathNameOptional().orElseThrow(IllegalStateException::new);
-        return resolvePathNameWithMappings(archivePathName, pathMappings, resolveCaseInsitiveSiblings);
+        boolean tryResolveArchivedBookYearsFromRootPath = fileConfiguration.isTryResolveArchivedBookYearsFromRootPath();
+        if (tryResolveArchivedBookYearsFromRootPath) {
+            Path rootPath = fileConfiguration.getRootPath();
+            String pathFileName = convertToUnixPath(archivePathName)
+                    .getFileName()
+                    .toString();
+            Path resolvedFromRoot = rootPath.resolve(pathFileName);
+            if (Files.exists(resolvedFromRoot)) {
+                return Optional.of(resolvedFromRoot);
+            }
+        }
+        boolean resolveCaseInsensitiveSiblings = fileConfiguration.isResolveCaseInsensitiveSiblings();
+        return resolvePathNameWithMappings(archivePathName, pathMappings, resolveCaseInsensitiveSiblings);
     }
 
     private static Path convertToUnixPath(String absolutePathName) {

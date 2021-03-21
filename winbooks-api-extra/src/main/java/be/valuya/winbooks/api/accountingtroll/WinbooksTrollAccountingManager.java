@@ -14,8 +14,10 @@ import be.valuya.accountingtroll.domain.ATThirdPartyBalance;
 import be.valuya.jbooks.model.WbDocument;
 import be.valuya.winbooks.api.accountingtroll.cache.AccountingManagerCache;
 import be.valuya.winbooks.api.accountingtroll.converter.ATDocumentConverter;
+import be.valuya.winbooks.api.accountingtroll.converter.ATThirdPartyConverter;
 import be.valuya.winbooks.api.extra.WinbooksExtraService;
 import be.valuya.winbooks.api.extra.config.WinbooksFileConfiguration;
+import be.valuya.winbooks.domain.WinbooksDossierThirdParty;
 import be.valuya.winbooks.domain.error.WinbooksError;
 import be.valuya.winbooks.domain.error.WinbooksException;
 
@@ -39,6 +41,7 @@ public class WinbooksTrollAccountingManager implements AccountingManager {
 
     private WinbooksExtraService extraService;
     private WinbooksFileConfiguration fileConfiguration;
+    private ATThirdPartyConverter atThirdPartyConverter;
 
     private final AccountingManagerCache accountingManagerCache;
 
@@ -46,6 +49,14 @@ public class WinbooksTrollAccountingManager implements AccountingManager {
         this.fileConfiguration = fileConfiguration;
         extraService = new WinbooksExtraService();
         accountingManagerCache = new AccountingManagerCache(fileConfiguration);
+        atThirdPartyConverter = new ATThirdPartyConverter();
+    }
+
+    @Override
+    public ATThirdParty getSubjectThirdParty() {
+        WinbooksDossierThirdParty dossierThirdParty = extraService.getDossierThirdPartyFromParamTable(fileConfiguration);
+        ATThirdParty thirdParty = atThirdPartyConverter.convertToTrollThirdParty(dossierThirdParty);
+        return thirdParty;
     }
 
     @Override

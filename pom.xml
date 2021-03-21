@@ -57,7 +57,7 @@
             <dependency>
                 <groupId>be.valuya.accountingtroll</groupId>
                 <artifactId>accountingtroll</artifactId>
-                <version>4.0.0</version>
+                <version>4.0.1-SNAPSHOT</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

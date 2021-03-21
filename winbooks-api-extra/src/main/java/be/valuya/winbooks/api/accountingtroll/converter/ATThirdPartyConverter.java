@@ -4,8 +4,10 @@ import be.valuya.accountingtroll.domain.ATThirdParty;
 import be.valuya.accountingtroll.domain.ATThirdPartyType;
 import be.valuya.jbooks.model.WbClientSupplier;
 import be.valuya.jbooks.model.WbClientSupplierType;
+import be.valuya.winbooks.domain.WinbooksDossierThirdParty;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +48,32 @@ public class ATThirdPartyConverter {
         thirdParty.setPhoneNumber(phoneNumber);
         thirdParty.setBankAccountNumber(bankAccount);
         thirdParty.setLanguage(lang);
+        return thirdParty;
+    }
+
+
+    public ATThirdParty convertToTrollThirdParty(WinbooksDossierThirdParty dossierThirdParty) {
+        ATThirdParty thirdParty = new ATThirdParty();
+
+        Optional.ofNullable(dossierThirdParty.getName())
+                .ifPresent(thirdParty::setFullName);
+
+        String fullAddress = Stream.of(dossierThirdParty.getAddress1(), dossierThirdParty.getAddress2())
+                .filter(s -> s != null && !s.isBlank())
+                .collect(Collectors.joining("\n"));
+        Optional.of(fullAddress)
+                .filter(s -> !s.isBlank())
+                .ifPresent(thirdParty::setAddress);
+
+        Optional.ofNullable(dossierThirdParty.getZip())
+                .ifPresent(thirdParty::setZipCode);
+        Optional.ofNullable(dossierThirdParty.getCity())
+                .ifPresent(thirdParty::setCity);
+        Optional.ofNullable(dossierThirdParty.getCountryCode())
+                .ifPresent(thirdParty::setCountryCode);
+        Optional.ofNullable(dossierThirdParty.getVatNumber())
+                .ifPresent(thirdParty::setVatNumber);
+
         return thirdParty;
     }
 
